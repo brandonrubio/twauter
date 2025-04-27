@@ -1,0 +1,59 @@
+name: Build API Image
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  go-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.2"
+
+      - name: Download Go Modules
+        run: go mod download
+
+      - name: Run Linter
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: "latest"
+
+      - name: Build Binary and Prepare Artifact
+        run: |
+          mkdir -p build
+          go build -o build/twauter ./main.go
+          cp appconfig.json build/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-artifacts
+          path: build/
+
+  build-image:
+    needs: go-build # ✅ Key line added
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code (for Dockerfile)
+        uses: actions/checkout@v3
+
+      - name: Download API Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: go-artifacts
+          path: .
+
+      - name: Show Directory Contents
+        run: ls -R
+
+      - name: Build Docker Image
+        run: |
+          docker build -t twauter:latest .
