@@ -1,0 +1,18 @@
+{
+  "development": {
+    "logger": {
+      "level": "debug"
+    },
+    "api": {
+      "port": "8080"
+    }
+  },
+  "production": {
+    "logger": {
+      "level": "info"
+    },
+    "api": {
+      "port": "8080"
+    }
+  }
+}
