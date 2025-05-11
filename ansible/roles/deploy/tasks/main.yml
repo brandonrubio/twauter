@@ -1,0 +1,37 @@
+- name: Install Nginx and Docker
+  apt:
+    name: ["nginx", "docker.io"]
+    state: present
+    update_cache: yes
+
+- name: Start and enable services
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - nginx
+    - docker
+
+- name: Copy Dockerfile
+  copy:
+    src: Dockerfile
+    dest: /home/{{ ansible_user }}/Dockerfile
+    mode: 0644
+
+- name: Copy app code
+  copy:
+    src: app/
+    dest: /home/{{ ansible_user }}/app/
+    mode: 0755
+
+- name: Build Docker image
+  command: docker build -t myapp /home/{{ ansible_user }}
+
+- name: Run container
+  docker_container:
+    name: myapp
+    image: myapp
+    state: started
+    ports:
+      - "80:80"
